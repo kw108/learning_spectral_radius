@@ -1,4 +1,4 @@
-![globecom](./assets/ieee-globecom-restricted_web-use-r_0.png)
+![globecom](./assets/ieee-globecom@halfx.png)
 ![comsoc](./assets/ieee-comsoc-new@2x.png)
 ![ieee](./assets/ieee@2x.png)
 
