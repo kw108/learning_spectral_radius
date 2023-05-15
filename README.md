@@ -1,4 +1,6 @@
-![plot](./directory_1/directory_2/.../directory_n/plot.png)
+![globecom](./assets/ieee-globecom-restricted_web-use-r_0.png)
+![comsoc](./assets/ieee-comsoc-new@2x.png)
+![ieee](./assets/ieee@2x.png)
 
 IEEE Global Communications Conference
 4–8 December 2023 // Kuala Lumpur, Malaysia
