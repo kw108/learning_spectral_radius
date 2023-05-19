@@ -25,14 +25,17 @@ if args.adjoint:
 else:
     from torchdiffeq import odeint
 
-sampling_rate = 5e3
-sampling_rate_str = '5e3'
+sampling_rate = 1e4
+sampling_rate_str = '1e4'
 fading_type = 'rician'
+uniform = True
 
 device = torch.device('cuda:' + str(args.gpu) if torch.cuda.is_available() else 'cpu')
 # t = torch.linspace(1. / sampling_rate, 100. / sampling_rate, args.data_size).to(device)
-indices = sorted(np.random.choice(list(range(101)), 101, replace=False))
-# indices = list(range(0, 101, 1))
+if uniform:
+    indices = list(range(0, 1010, 10))
+else:
+    indices = sorted(np.random.choice(list(range(1010)), 1010, replace=False))
 t = torch.tensor([i / sampling_rate for i in indices[1:]]).to(device)
 
 with open('eigentriples_' + sampling_rate_str + '.pkl', 'rb') as file:
@@ -51,12 +54,6 @@ with open('eigentriples_' + sampling_rate_str + '.pkl', 'rb') as file:
 
 m = np.median(w)
 
-# true_y = [[w[1] / m] + list(lv[1]) + list(rv[1]) + list(gain[1].ravel() / m) + list((gain[0].ravel()) / m)]
-# for i in range(1, 100):
-    # true_y.append([w[i + 1] / m] + list(lv[i + 1]) + list(rv[i + 1]) + list(gain[i + 1].ravel() / m) + list(gain[i].ravel() / m))
-# true_y0 = true_y[0]
-# true_y0 = torch.tensor([true_y0], dtype=torch.float32).to(device)
-# true_y = torch.tensor([[y] for y in true_y], dtype=torch.float32).to(device)
 true_y = [[w[indices[1]] / m] + list(lv[indices[1]]) + list(rv[indices[1]]) + list(gain[indices[1]].ravel() / m) + list((gain[indices[0]].ravel()) / m) + [indices[1] - indices[0]]]
 for i in range(1, 100):
     true_y.append([w[indices[i + 1]] / m] + list(lv[indices[i + 1]]) + list(rv[indices[i + 1]]) + list(gain[indices[i + 1]].ravel() / m) + list(gain[indices[i]].ravel() / m) + [indices[i + 1] - indices[i]])
@@ -162,17 +159,9 @@ class ODEFunc(nn.Module):
         w, lv, rv, A, Ap, diff = torch.split(y, [1, 8, 8, 64, 64, 1], dim=-1)
         B = A.reshape(list(A.size())[:-1] + [8, 8])
         Bp = Ap.reshape(list(Ap.size())[:-1] + [8, 8])
-        # print((B - Bp).size())
-        # print(diff.size())
         w1 = torch.matmul(lv.unsqueeze(-2), torch.div((B - Bp), diff.unsqueeze(-1).expand_as(B - Bp)) * sampling_rate)
         w1 = torch.matmul(w1, rv.unsqueeze(-1))
         w1 = w1.squeeze(-1) / torch.matmul(lv, torch.transpose(rv, dim0=-1, dim1=-2))
-        # if len(lv.size()) == 3:
-        #     c = torch.einsum('ijk,ijk->ij', lv, rv)
-        # else:
-        #     c = torch.einsum('ij,ij->i', lv, rv)
-        # c = c.unsqueeze(-1)
-        # w1 = torch.div(w1, c)
         Ai = A.reshape(list(self.net(y).size())[:-1] + [8, 8])
         w2 = torch.matmul(rv.unsqueeze(-2), Ai)
         w2 = torch.matmul(w2, torch.div((B - Bp), diff.unsqueeze(-1).expand_as(B - Bp)) * sampling_rate)
@@ -180,7 +169,6 @@ class ODEFunc(nn.Module):
         w2 = w2.squeeze(-1)
         w2 = torch.matmul(w2, rv) - torch.matmul(torch.matmul(Ai, torch.div((B - Bp), diff.unsqueeze(-1).expand_as(B - Bp)) * sampling_rate), rv.unsqueeze(-1)).squeeze(-1)
         At = torch.transpose(Ai, dim0=-1, dim1=-2)
-        # At = A.reshape(list(self.net2(y).size())[:-1] + [8, 8])
         w3 = torch.matmul(lv.unsqueeze(-2), At)
         w3 = torch.matmul(w3, torch.transpose(torch.div((B - Bp), diff.unsqueeze(-1).expand_as(B - Bp)) * sampling_rate, dim0=-1, dim1=-2))
         w3 = torch.matmul(w3, lv.unsqueeze(-1))
@@ -237,8 +225,6 @@ if __name__ == '__main__':
                 pred_y = odeint(func, true_y0, t)
                 loss = torch.mean(torch.square(pred_y[0: 5, :, 0] - true_y[0: 5, :, 0]))
                 print('Iter {:04d} | Total Loss {:.6f}'.format(itr, loss.item()))
-                # print(pred_y[0: 20, 0, 0])
-                # print(true_y[0: 20, 0, 0])
                 visualize(true_y, pred_y, func, ii)
                 ii += 1
 
