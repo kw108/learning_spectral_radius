@@ -14,7 +14,9 @@ This code repository is to accompany the paper _Deep Learning for the Spectral R
 Specify sample_rate in data/synthesize.m and run it to generate sampled channel gains as datasets.  
 Specify sampling_rate in data/preprocess_matlab_data.py and run it to generate ground truths, i.e., spectral radii, left eigenvectors, and right eigenvectors.  
 
+## Baseline Models
+Specify sampling_rate (5e3, 1e4, 5e4, 1e5), fading_type ('rayleigh', 'rician'), and network_type ('ICNN', 'DNN') in NN.py. Run it to train and test ICNN and DNN models.  
 
-Specify sampling rate and fading type and run NN.py to train and test ICNN and DNN models.  
-Specify sampling rate and fading type and run RNN.py to train and test RNN models.  
-Specify sampling rate and fading type and run ODENet.py to train and test ODE-Net models.  
+## Time Series Models
+Specify sampling_rate (5e3, 1e4, 5e4, 1e5), fading_type ('rayleigh', 'rician'), and uniform (True or False) in RNN.py. Run it to train and test RNN models.  
+Specify sampling_rate (5e3, 1e4, 5e4, 1e5), fading type ('rayleigh', 'rician'), and uniform (True or False) in ODENet.py. Run it to train and test ODE-Net models.  
